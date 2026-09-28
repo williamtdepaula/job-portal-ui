@@ -21,6 +21,7 @@ import MyJobs from "./pages/MyJobs";
 import JobApplicants from "./pages/JobApplicants";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Dashboard from "./pages/admin/Dashboard";
 import CompanyManagement from "./pages/admin/CompanyManagement";
 import EmployerManagement from "./pages/admin/EmployerManagement";
@@ -135,6 +136,7 @@ function App() {
 
                   {/* Contact Route */}
                   <Route path="contact" element={<Contact />} />
+                  <Route path="privacy-policy" element={<PrivacyPolicy />} />
                 </Route>
               </Routes>
             </Router>
