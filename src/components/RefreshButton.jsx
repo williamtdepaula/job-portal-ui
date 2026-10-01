@@ -1,20 +1,27 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useJobsData } from '../contexts/JobsDataContext';
 import { useCompanies } from '../contexts/CompaniesContext';
 
-const RefreshButton = ({ showLabel = true, className = '' }) => {
+export const RefreshButton = ({ showLabel = true, className = '' }) => {
   const { forceRefresh: refreshJobs, getCacheAge: getJobsCacheAge, loading: jobsLoading } = useJobsData();
   const { forceRefresh: refreshCompanies, getCacheAge: getCompaniesCacheAge, loading: companiesLoading } = useCompanies();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => clearTimeout(refreshTimeoutRef.current);
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       await Promise.all([refreshJobs(), refreshCompanies()]);
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+      console.error('Error refreshing data:', error?.message);
     } finally {
-      setTimeout(() => setIsRefreshing(false), 500); // Small delay for visual feedback
+      refreshTimeoutRef.current = setTimeout(() => setIsRefreshing(false), 500); // Small delay for visual feedback
     }
   };
 
@@ -31,6 +38,7 @@ const RefreshButton = ({ showLabel = true, className = '' }) => {
     return `${Math.floor(maxAge / 3600)}h ago`;
   };
 
+  const cacheAgeLabel = formatCacheAge();
   const isLoading = jobsLoading || companiesLoading || isRefreshing;
 
   return (
@@ -38,15 +46,9 @@ const RefreshButton = ({ showLabel = true, className = '' }) => {
       <button
         onClick={handleRefresh}
         disabled={isLoading}
-        className={`
-          inline-flex items-center gap-2 px-4 py-2 rounded-lg
-          font-medium transition-all duration-200
-          ${isLoading
-            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-            : 'bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg active:scale-95'
-          }
-        `}
-        title={`Last updated: ${formatCacheAge()}`}
+        aria-label="Refresh data"
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${isLoading ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg active:scale-95'}`}
+        title={`Last updated: ${cacheAgeLabel}`}
       >
         <svg
           className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`}
@@ -70,11 +72,9 @@ const RefreshButton = ({ showLabel = true, className = '' }) => {
 
       {showLabel && !isLoading && (
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          Updated {formatCacheAge()}
+          Updated {cacheAgeLabel}
         </span>
       )}
     </div>
   );
 };
-
-export default RefreshButton;

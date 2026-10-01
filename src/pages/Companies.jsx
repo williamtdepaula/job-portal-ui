@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useCompanies } from '../contexts/CompaniesContext'
 import { useJobsData } from '../contexts/JobsDataContext'
+import { getCompanyPath } from '../utils/slugify'
 
 const Companies = () => {
   const { companies, loading, error, refetch } = useCompanies()
@@ -266,7 +267,7 @@ const Companies = () => {
           {paginatedCompanies.map((company, index) => (
             <Link
               key={company.name}
-              to={`/companies/${company.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
+              to={getCompanyPath(company.name)}
               className="group block bg-white dark:bg-gray-800 backdrop-blur-xl rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 transform hover:scale-105 hover:-translate-y-2"
               style={{ animationDelay: `${index * 100}ms` }}
             >

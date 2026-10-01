@@ -1,31 +1,38 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useCompanies } from '../contexts/CompaniesContext'
 import { useJobsData } from '../contexts/JobsDataContext'
+import { CompanyLogo } from './CompanyLogo'
+import { getCompanyPath } from '../utils/slugify'
 
-const CompaniesSection = () => {
+const FEATURED_COMPANIES_COUNT = 8
+const DEFAULT_GRADIENT = 'from-gray-500 to-gray-600'
+const INDUSTRY_GRADIENTS = {
+  'Technology': 'from-blue-500 to-purple-500',
+  'E-commerce': 'from-orange-500 to-yellow-500',
+  'Automotive': 'from-red-600 to-red-800',
+  'Entertainment': 'from-red-600 to-pink-600',
+  'Music': 'from-green-500 to-green-600',
+  'Travel': 'from-pink-500 to-rose-500',
+  'Fintech': 'from-purple-500 to-indigo-500',
+  'Cryptocurrency': 'from-yellow-500 to-orange-500'
+}
+
+export const CompaniesSection = () => {
   const { companies, loading } = useCompanies()
   const { jobs } = useJobsData()
 
   // Get job counts for each company
-  const companiesWithJobCounts = companies.slice(0, 8).map(company => ({
-    ...company,
-    jobCount: jobs.filter(job => job.company === company.name).length
-  }))
-  
-  // Add gradient colors based on industry
-  const getGradient = (industry) => {
-    switch (industry) {
-      case 'Technology': return 'from-blue-500 to-purple-500'
-      case 'E-commerce': return 'from-orange-500 to-yellow-500'
-      case 'Automotive': return 'from-red-600 to-red-800'
-      case 'Entertainment': return 'from-red-600 to-pink-600'
-      case 'Music': return 'from-green-500 to-green-600'
-      case 'Travel': return 'from-pink-500 to-rose-500'
-      case 'Fintech': return 'from-purple-500 to-indigo-500'
-      case 'Cryptocurrency': return 'from-yellow-500 to-orange-500'
-      default: return 'from-gray-500 to-gray-600'
-    }
-  }
+  const companiesWithJobCounts = useMemo(() => {
+    const jobCounts = new Map()
+    jobs.forEach(job => {
+      jobCounts.set(job.company, (jobCounts.get(job.company) ?? 0) + 1)
+    })
+    return companies.slice(0, FEATURED_COMPANIES_COUNT).map(company => ({
+      ...company,
+      jobCount: jobCounts.get(company.name) ?? 0
+    }))
+  }, [companies, jobs])
 
   return (
     <section className="relative py-24 bg-gradient-to-br from-white via-primary-50/30 to-purple-50/30 dark:from-gray-800 dark:via-gray-900 dark:to-purple-950/20 overflow-hidden">
@@ -57,77 +64,73 @@ const CompaniesSection = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {companiesWithJobCounts.map((company, index) => (
-            <Link
-              key={company.name}
-              to={`/companies/${company.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-              className="group relative bg-white dark:bg-gray-800 backdrop-blur-xl rounded-3xl p-8 text-center shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 transform hover:scale-105 hover:-translate-y-2 block"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Glassmorphism effect */}
-              <div className={`absolute inset-0 bg-gradient-to-r ${getGradient(company.industry)} rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-xl`}></div>
-              
-              <div className="relative z-10">
-                <div className={`mb-6 p-4 bg-gradient-to-br ${getGradient(company.industry)} rounded-2xl inline-block transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
-                  <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 w-20 h-20 flex items-center justify-center">
-                    <img
-                      src={company.logo}
-                      alt={`${company.name} logo`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 hidden w-full h-full items-center justify-center">
-                      {company.name.charAt(0)}
+            {companiesWithJobCounts.map((company) => {
+              const gradient = INDUSTRY_GRADIENTS[company.industry] ?? DEFAULT_GRADIENT
+              return (
+                <Link
+                  key={company.name}
+                  to={getCompanyPath(company.name)}
+                  className="group relative bg-white dark:bg-gray-800 rounded-3xl p-8 text-center shadow-lg hover:shadow-2xl transition-all duration-500 border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 transform hover:scale-105 hover:-translate-y-2 block"
+                >
+                  {/* Glassmorphism effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-xl`}></div>
+
+                  <div className="relative z-10">
+                    <div className={`mb-6 p-4 bg-gradient-to-br ${gradient} rounded-2xl inline-block transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 w-20 h-20 flex items-center justify-center">
+                        <CompanyLogo
+                          src={company.logo}
+                          name={company.name}
+                          imgClassName="w-full h-full object-contain"
+                          fallbackClassName="text-3xl font-bold text-primary-600 dark:text-primary-400 flex w-full h-full items-center justify-center"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                  {company.name}
-                </h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                      {company.name}
+                    </h3>
 
-                {company.employees && (
-                  <div className="text-gray-600 dark:text-gray-400 mb-2 text-sm">
-                    {company.employees.toLocaleString()} employees
-                  </div>
-                )}
+                    {company.employees && (
+                      <div className="text-gray-600 dark:text-gray-400 mb-2 text-sm">
+                        {company.employees.toLocaleString()} employees
+                      </div>
+                    )}
 
-                <div className="text-gray-600 dark:text-gray-400 mb-4 font-semibold">
-                  <span className="text-2xl font-black bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">{company.jobCount}</span>
-                  <div className="text-sm">open positions</div>
-                </div>
+                    <div className="text-gray-600 dark:text-gray-400 mb-4 font-semibold">
+                      <span className="text-2xl font-black bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">{company.jobCount}</span>
+                      <div className="text-sm">open positions</div>
+                    </div>
                 
-                <div className="flex items-center justify-center mb-4">
-                  <div className="flex text-yellow-400 mr-2">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-5 h-5 transition-all duration-300 ${
-                          i < Math.floor(company.rating) 
-                            ? 'fill-current transform group-hover:scale-110' 
-                            : 'fill-gray-300 dark:fill-gray-600'
-                        }`}
-                        viewBox="0 0 24 24"
-                        style={{ animationDelay: `${(index + i) * 50}ms` }}
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="font-bold text-gray-700 dark:text-gray-300">
-                    {company.rating}
-                  </span>
-                </div>
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="flex text-yellow-400 mr-2">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-5 h-5 transition-all duration-300 ${
+                              i < Math.floor(company.rating) 
+                                ? 'fill-current transform group-hover:scale-110' 
+                                : 'fill-gray-300 dark:fill-gray-600'
+                            }`}
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="font-bold text-gray-700 dark:text-gray-300">
+                        {company.rating}
+                      </span>
+                    </div>
                 
-                <span className={`inline-block text-sm font-bold px-4 py-2 rounded-full bg-gradient-to-r ${getGradient(company.industry)} text-white shadow-lg transform group-hover:scale-105 transition-transform duration-300`}>
-                  {company.industry}
-                </span>
-              </div>
-            </Link>
-            ))}
+                    <span className={`inline-block text-sm font-bold px-4 py-2 rounded-full bg-gradient-to-r ${gradient} text-white shadow-lg transform group-hover:scale-105 transition-transform duration-300`}>
+                      {company.industry}
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
 
@@ -149,5 +152,3 @@ const CompaniesSection = () => {
     </section>
   )
 }
-
-export default CompaniesSection

@@ -1,16 +1,36 @@
 import { useState, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useJobsData } from '../contexts/JobsDataContext'
+import { CompanyLogo } from './CompanyLogo'
 
-const JobsSection = () => {
+const CATEGORIES = ['All', 'Technology', 'Design', 'Marketing', 'Sales', 'Finance', 'Healthcare']
+const SORT_FILTERS = ['Recent', 'Popular', 'Salary', 'Remote']
+const JOBS_PAGE_SIZE = 6
+
+const formatSalary = (min, max) => {
+  return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k`
+}
+
+const getTimeAgo = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
+
+  if (diffInHours < 1) {
+    return 'Just now'
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`
+  } else {
+    const diffInDays = Math.floor(diffInHours / 24)
+    return `${diffInDays}d ago`
+  }
+}
+
+export const JobsSection = () => {
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeFilter, setActiveFilter] = useState('Recent')
-  const [displayCount, setDisplayCount] = useState(6)
-  const navigate = useNavigate()
+  const [displayCount, setDisplayCount] = useState(JOBS_PAGE_SIZE)
   const { jobs, loading } = useJobsData()
-
-  const categories = ['All', 'Technology', 'Design', 'Marketing', 'Sales', 'Finance', 'Healthcare']
-  const filters = ['Recent', 'Popular', 'Salary', 'Remote']
 
   // Filter and sort jobs based on selected filters
   const filteredJobs = useMemo(() => {
@@ -24,7 +44,7 @@ const JobsSection = () => {
     // Sort by filter
     switch (activeFilter) {
       case 'Recent':
-        filtered = [...filtered].sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate))
+        filtered = [...filtered].sort((a, b) => (a.postedDate < b.postedDate ? 1 : a.postedDate > b.postedDate ? -1 : 0))
         break
       case 'Popular':
         filtered = [...filtered].sort((a, b) => b.applicationsCount - a.applicationsCount)
@@ -44,25 +64,8 @@ const JobsSection = () => {
 
   const displayedJobs = filteredJobs.slice(0, displayCount)
   
-  const formatSalary = (min, max) => {
-    return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k`
-  }
-
-  const getTimeAgo = (dateString) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
-    
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24)
-      return `${diffInDays}d ago`
-    }
-  }
-
   const loadMoreJobs = () => {
-    setDisplayCount(prev => Math.min(prev + 6, filteredJobs.length))
+    setDisplayCount(prev => Math.min(prev + JOBS_PAGE_SIZE, filteredJobs.length))
   }
 
   // Show loading skeleton
@@ -76,7 +79,7 @@ const JobsSection = () => {
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {Array.from({ length: JOBS_PAGE_SIZE }, (_, i) => i).map((i) => (
               <div key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-2xl p-6 h-80"></div>
             ))}
           </div>
@@ -109,10 +112,13 @@ const JobsSection = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {categories.map((category) => (
+          {CATEGORIES.map((category) => (
             <button
               key={category}
-              onClick={() => setActiveCategory(category)}
+              onClick={() => {
+                setActiveCategory(category)
+                setDisplayCount(JOBS_PAGE_SIZE)
+              }}
               className={`relative group px-8 py-4 rounded-2xl text-sm font-bold transition-all duration-300 transform hover:scale-105 ${
                 activeCategory === category
                   ? 'bg-gradient-to-r from-primary-600 via-purple-600 to-blue-600 text-white shadow-2xl shadow-primary-500/25'
@@ -132,10 +138,13 @@ const JobsSection = () => {
             Showing {displayedJobs.length} of {filteredJobs.length} jobs
           </div>
           <div className="flex gap-2">
-            {filters.map((filter) => (
+            {SORT_FILTERS.map((filter) => (
               <button
                 key={filter}
-                onClick={() => setActiveFilter(filter)}
+                onClick={() => {
+                  setActiveFilter(filter)
+                  setDisplayCount(JOBS_PAGE_SIZE)
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeFilter === filter
                     ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
@@ -149,12 +158,11 @@ const JobsSection = () => {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {displayedJobs.map((job, index) => (
+          {displayedJobs.map((job) => (
             <Link
               key={job.id}
-              to={`/jobs/${job.id}`}
-              className="group relative bg-white dark:bg-gray-800 backdrop-blur-xl rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 cursor-pointer transform hover:scale-105 hover:-translate-y-2 block"
-              style={{ animationDelay: `${index * 100}ms` }}
+              to={`/jobs/${encodeURIComponent(job.id)}`}
+              className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-lg hover:shadow-2xl transition-[transform,box-shadow,border-color] duration-500 p-8 border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-600 cursor-pointer transform hover:scale-105 hover:-translate-y-2 block"
             >
               {/* Gradient border effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-purple-500 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl"></div>
@@ -162,18 +170,12 @@ const JobsSection = () => {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center">
                     <div className="mr-4 p-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl w-16 h-16 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <img
+                      <CompanyLogo
                         src={job.companyLogo}
-                        alt={`${job.company} logo`}
-                        className="w-12 h-12 object-contain"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
+                        name={job.company}
+                        imgClassName="w-12 h-12 object-contain"
+                        fallbackClassName="text-xl font-bold text-primary-600 dark:text-primary-400 flex w-12 h-12 items-center justify-center"
                       />
-                      <div className="text-xl font-bold text-primary-600 dark:text-primary-400 hidden w-12 h-12 items-center justify-center">
-                        {job.company.charAt(0)}
-                      </div>
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:bg-gradient-to-r group-hover:from-primary-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
@@ -210,11 +212,10 @@ const JobsSection = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {job.skills && job.skills.slice(0, 3).map((skill, tagIndex) => (
+                  {job.skills && job.skills.slice(0, 3).map((skill) => (
                     <span
                       key={skill}
                       className="bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/30 dark:to-purple-900/30 text-primary-700 dark:text-primary-300 text-sm font-semibold px-4 py-2 rounded-xl border border-primary-200/50 dark:border-primary-700/50 hover:scale-105 transition-transform duration-200"
-                      style={{ animationDelay: `${(index + tagIndex) * 50}ms` }}
                     >
                       {skill}
                     </span>
@@ -223,10 +224,10 @@ const JobsSection = () => {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
                   <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{getTimeAgo(job.postedDate)}</span>
-                  <div className="relative group overflow-hidden bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-primary-500/25">
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative group overflow-hidden bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-primary-500/25 inline-block">
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     <span className="relative z-10">Apply Now</span>
-                  </div>
+                  </span>
                 </div>
               </div>
             </Link>
@@ -253,5 +254,3 @@ const JobsSection = () => {
     </section>
   )
 }
-
-export default JobsSection

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useJobs } from '../context/JobContext'
 import { useJobsData } from '../contexts/JobsDataContext'
 import { useAuth } from '../context/AuthContext'
-import ConfirmationModal from '../components/ConfirmationModal'
+import { ConfirmationModal } from '../components/ConfirmationModal'
 
 const JobDetail = () => {
   const { id } = useParams()
