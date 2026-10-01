@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useJobsData } from "../contexts/JobsDataContext";
+import { useCompanies } from "../contexts/CompaniesContext";
 
 const Hero = () => {
+  const { totalJobs, loading: jobsLoading } = useJobsData();
+  const { companies, loading: companiesLoading } = useCompanies();
   const [jobSearch, setJobSearch] = useState("");
   const [location, setLocation] = useState("");
   const navigate = useNavigate();
@@ -161,7 +165,7 @@ const Hero = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               <div className="group text-center p-6 rounded-2xl bg-gradient-to-br from-white/50 to-primary-50/50 dark:from-gray-800/50 dark:to-primary-900/20 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 hover:scale-105 transition-all duration-300">
                 <div className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                  50K+
+                  {jobsLoading ? "—" : totalJobs.toLocaleString()}
                 </div>
                 <div className="text-gray-700 dark:text-gray-300 font-semibold text-lg">
                   Jobs Available
@@ -172,7 +176,7 @@ const Hero = () => {
               </div>
               <div className="group text-center p-6 rounded-2xl bg-gradient-to-br from-white/50 to-purple-50/50 dark:from-gray-800/50 dark:to-purple-900/20 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 hover:scale-105 transition-all duration-300">
                 <div className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                  10K+
+                  {companiesLoading ? "—" : companies.length.toLocaleString()}
                 </div>
                 <div className="text-gray-700 dark:text-gray-300 font-semibold text-lg">
                   Active Companies

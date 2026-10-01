@@ -727,8 +727,7 @@ export const generateJobs = (count = 1000) => {
     const level = getRandomItem(experienceLevels);
     const salary = getRandomSalary(category, level);
     const workType = getRandomItem(workTypes);
-    const isRemote =
-      workType === "Remote" || (workType === "Hybrid" && Math.random() > 0.5);
+    const isRemote = workType === "Remote";
 
     const job = {
       id: i,
