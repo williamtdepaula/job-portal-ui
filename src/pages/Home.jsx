@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import Hero from '../components/Hero'
-import JobsSection from '../components/JobsSection'
-import CompaniesSection from '../components/CompaniesSection'
+import { Hero } from '../components/Hero'
+import { JobsSection } from '../components/JobsSection'
+import { CompaniesSection } from '../components/CompaniesSection'
 
 const Home = () => {
   const { user, isJobSeeker } = useAuth()

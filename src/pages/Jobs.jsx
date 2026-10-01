@@ -4,8 +4,8 @@ import { jobTitles, cities, experienceLevels } from '../data/mockData'
 import { useJobs } from '../context/JobContext'
 import { useJobsData } from '../contexts/JobsDataContext'
 import { useAuth } from '../context/AuthContext'
-import RefreshButton from '../components/RefreshButton'
-import ConfirmationModal from '../components/ConfirmationModal'
+import { RefreshButton } from '../components/RefreshButton'
+import { ConfirmationModal } from '../components/ConfirmationModal'
 
 const Jobs = () => {
   const [searchParams] = useSearchParams()

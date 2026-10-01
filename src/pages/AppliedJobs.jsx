@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
-import ConfirmationModal from '../components/ConfirmationModal';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 const AppliedJobs = () => {
   const { appliedJobs, withdrawApplication } = useJobs();

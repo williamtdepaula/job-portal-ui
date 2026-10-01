@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom'
-import Navbar from './Navbar'
-import Footer from './Footer'
+import { Navbar } from './Navbar'
+import { Footer } from './Footer'
 
-const Layout = () => {
+export const Layout = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <Navbar />
@@ -13,5 +13,3 @@ const Layout = () => {
     </div>
   )
 }
-
-export default Layout
